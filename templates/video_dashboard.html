@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Surveillance Dashboard - Honeywell Hackathon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background-color: #f7fafc;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background-color: #ebf8ff;
+        }
+        
+        .upload-icon {
+            font-size: 3em;
+            color: #a0aec0;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            color: #718096;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #718096;
+        }
+        
+        .btn-danger {
+            background: #e53e3e;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+        
+        .status.idle {
+            background-color: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .status.processing {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            border: 2px solid #bee3f8;
+            animation: pulse 2s infinite;
+        }
+        
+        .status.completed {
+            background-color: #f0fff4;
+            color: #2f855a;
+            border: 2px solid #c6f6d5;
+        }
+        
+        .status.failed {
+            background-color: #fed7d7;
+            color: #c53030;
+            border: 2px solid #feb2b2;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .alerts-container {
+            grid-column: 1 / -1;
+        }
+        
+        .alert {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .alert-time {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .alert-details {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .alert-info h3 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+        
+        .alert-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .stat {
+            background: #f7fafc;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+        
+        .alert-screenshot {
+            max-width: 200px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .no-alerts {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+            font-style: italic;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .alert-details {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .alert-screenshot {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI Surveillance Dashboard</h1>
+            <p>Honeywell Hackathon - Video Anomaly Detection</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- Video Upload Card -->
+            <div class="card">
+                <h2>📹 Video Upload</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Drag & drop video file here<br>or click to browse</div>
+                    <input type="file" id="videoInput" class="file-input" accept="video/*">
+                    <button class="btn" onclick="document.getElementById('videoInput').click()">Choose File</button>
+                </div>
+                
+                <div id="uploadStatus" style="display: none;">
+                    <div class="status idle">
+                        <strong>Status:</strong> <span id="statusText">Ready to upload</span>
+                    </div>
+                    <div id="fileInfo" style="display: none;">
+                        <strong>File:</strong> <span id="fileName"></span><br>
+                        <strong>Size:</strong> <span id="fileSize"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Processing Control Card -->
+            <div class="card">
+                <h2>⚙️ Processing Control</h2>
+                <div id="processingStatus" class="status idle">
+                    <strong>Status:</strong> <span id="processingStatusText">Idle</span>
+                </div>
+                
+                <div id="progressContainer" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div id="progressText">0%</div>
+                </div>
+                
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button class="btn" id="processBtn" onclick="startProcessing()" disabled>🚀 Start Processing</button>
+                    <button class="btn btn-secondary" onclick="checkStatus()">🔄 Refresh Status</button>
+                    <button class="btn btn-danger" onclick="clearData()">🗑️ Clear All</button>
+                </div>
+            </div>
+            
+            <!-- Alerts Display Card -->
+            <div class="card alerts-container">
+                <h2>🚨 Detection Alerts</h2>
+                <div id="alertsContainer">
+                    <div class="no-alerts">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📊</div>
+                        <p>No alerts yet. Upload a video and start processing to see results!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentVideo = null;
+        let processingStatus = 'idle';
+        let alerts = [];
+        
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const videoInput = document.getElementById('videoInput');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const processBtn = document.getElementById('processBtn');
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        videoInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        function handleFile(file) {
+            if (!file.type.startsWith('video/')) {
+                alert('Please select a valid video file!');
+                return;
+            }
+            
+            // Upload file
+            const formData = new FormData();
+            formData.append('video', file);
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentVideo = data.filename;
+                    showUploadStatus(file.name, file.size);
+                    processBtn.disabled = false;
+                } else {
+                    alert('Upload failed: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                alert('Upload failed!');
+            });
+        }
+        
+        function showUploadStatus(name, size) {
+            fileName.textContent = name;
+            fileSize.textContent = formatFileSize(size);
+            fileInfo.style.display = 'block';
+            uploadStatus.style.display = 'block';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Processing functions
+        function startProcessing() {
+            if (!currentVideo) {
+                alert('Please upload a video first!');
+                return;
+            }
+            
+            updateProcessingStatus('processing', 'Processing video...');
+            showProgress();
+            
+            fetch('/process', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateProcessingStatus('completed', 'Processing completed!');
+                    hideProgress();
+                    loadAlerts();
+                } else {
+                    updateProcessingStatus('failed', 'Processing failed: ' + data.error);
+                    hideProgress();
+                }
+            })
+            .catch(error => {
+                console.error('Processing error:', error);
+                updateProcessingStatus('failed', 'Processing failed!');
+                hideProgress();
+            });
+        }
+        
+        function updateProcessingStatus(status, text) {
+            processingStatus = status;
+            const statusDiv = document.getElementById('processingStatus');
+            const statusText = document.getElementById('processingStatusText');
+            
+            statusDiv.className = `status ${status}`;
+            statusText.textContent = text;
+        }
+        
+        function showProgress() {
+            document.getElementById('progressContainer').style.display = 'block';
+            simulateProgress();
+        }
+        
+        function hideProgress() {
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+        
+        function simulateProgress() {
+            let progress = 0;
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            const interval = setInterval(() => {
+                if (processingStatus === 'completed' || processingStatus === 'failed') {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                progress += Math.random() * 10;
+                if (progress > 90) progress = 90;
+                
+                progressFill.style.width = progress + '%';
+                progressText.textContent = Math.round(progress) + '%';
+            }, 500);
+        }
+        
+        function checkStatus() {
+            fetch('/status')
+            .then(response => response.json())
+            .then(data => {
+                updateProcessingStatus(data.status, data.status);
+                if (data.alerts_count > 0) {
+                    loadAlerts();
+                }
+            })
+            .catch(error => console.error('Status check error:', error));
+        }
+        
+        function loadAlerts() {
+            fetch('/alerts')
+            .then(response => response.json())
+            .then(data => {
+                alerts = data;
+                displayAlerts();
+            })
+            .catch(error => console.error('Alerts load error:', error));
+        }
+        
+        function displayAlerts() {
+            const container = document.getElementById('alertsContainer');
+            
+            if (alerts.length === 0) {
+                container.innerHTML = `
+                    <div class="no-alerts">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📊</div>
+                        <p>No alerts yet. Upload a video and start processing to see results!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let alertsHTML = '';
+            alerts.forEach(alert => {
+                alertsHTML += `
+                    <div class="alert">
+                        <div class="alert-header">
+                            <h3>🚨 Alert #${alert.id}</h3>
+                            <span class="alert-time">${alert.time_formatted}</span>
+                        </div>
+                        <div class="alert-details">
+                            <div class="alert-info">
+                                <div class="alert-stats">
+                                    <span class="stat">📊 ${alert.detections} detections</span>
+                                    <span class="stat">🎯 ${(alert.confidence * 100).toFixed(1)}% confidence</span>
+                                    <span class="stat">🎬 Frame ${alert.frame}</span>
+                                </div>
+                                <p><strong>Alert Type:</strong> ${alert.alert_type || 'Person Detection'}</p>
+                                <p><strong>Description:</strong> ${alert.description || 'High-confidence detection found'}</p>
+                            </div>
+                            ${alert.screenshot ? `
+                                <img src="/screenshot/${alert.screenshot}" alt="Alert Screenshot" class="alert-screenshot">
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = alertsHTML;
+        }
+        
+        function clearData() {
+            if (confirm('Are you sure you want to clear all data?')) {
+                fetch('/clear', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentVideo = null;
+                        alerts = [];
+                        updateProcessingStatus('idle', 'Idle');
+                        hideProgress();
+                        processBtn.disabled = true;
+                        uploadStatus.style.display = 'none';
+                        displayAlerts();
+                        alert('Data cleared successfully!');
+                    }
+                })
+                .catch(error => console.error('Clear error:', error));
+            }
+        }
+        
+        // Auto-refresh status every 5 seconds
+        setInterval(checkStatus, 5000);
+        
+        // Initial status check
+        checkStatus();
+    </script>
+</body>
+</html>
