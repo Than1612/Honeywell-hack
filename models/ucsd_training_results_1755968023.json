@@ -1,0 +1,13 @@
+{
+  "status": "failed",
+  "training_mode": "quick_test",
+  "model_size": "n",
+  "timestamp": "2025-08-23 22:23:26",
+  "steps": {
+    "dataset_preparation": {
+      "status": "completed",
+      "dataset_path": "processed_data/ucsd_quick_test/dataset.yaml"
+    }
+  },
+  "error": "Invalid CUDA 'device=auto' requested. Use 'device=cpu' or pass valid CUDA device(s) if available, i.e. 'device=0' or 'device=0,1,2,3' for Multi-GPU.\n\ntorch.cuda.is_available(): False\ntorch.cuda.device_count(): 0\nos.environ['CUDA_VISIBLE_DEVICES']: None\nSee https://pytorch.org/get-started/locally/ for up-to-date torch install instructions if no CUDA devices are seen by torch.\n"
+}
