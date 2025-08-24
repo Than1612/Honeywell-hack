@@ -1,5 +1,4 @@
 import numpy as np
-import cv2
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 from typing import List, Dict, Any, Tuple
